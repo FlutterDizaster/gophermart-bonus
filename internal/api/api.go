@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/FlutterDizaster/gophermart-bonus/internal/api/middleware"
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
@@ -35,10 +36,11 @@ type UserManager interface {
 }
 
 type Settings struct {
-	OrderMgr   OrderManager
-	BalanceMgr BalanceManager
-	UserMgr    UserManager
-	Addr       string
+	OrderMgr    OrderManager
+	BalanceMgr  BalanceManager
+	UserMgr     UserManager
+	Addr        string
+	Middlewares []middleware.Middleware
 }
 
 type API struct {
@@ -60,7 +62,10 @@ func New(settings Settings) *API {
 	// Создание роутера
 	r := chi.NewRouter()
 
-	// TODO: Установка middlewares
+	// Установка middlewares
+	for i := range settings.Middlewares {
+		r.Use(settings.Middlewares[i].Handle)
+	}
 
 	// Настройка роутинга
 	r.Route("/api/user", func(r chi.Router) {
