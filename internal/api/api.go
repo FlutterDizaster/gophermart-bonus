@@ -11,6 +11,11 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// TODO:
+// - Добавить шифрование.
+// - Добавить сжатие.
+// - Добавить подсчет контрольной суммы отправляемых ответов.
+
 type BalanceManager interface {
 	Get(ctx context.Context, username string) (models.Balance, error)
 	ProcessWithdraw(ctx context.Context, username string, withdraw models.Withdraw) error
@@ -28,12 +33,6 @@ type UserManager interface {
 	Register(context.Context, models.Credentials) (string, error)
 	Login(context.Context, models.Credentials) (string, error)
 }
-
-type key int
-
-const (
-	usernameKey key = iota
-)
 
 type Settings struct {
 	OrderMgr   OrderManager

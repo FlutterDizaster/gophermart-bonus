@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	ctxkeys "github.com/FlutterDizaster/gophermart-bonus/internal/context-keys"
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
 )
 
@@ -56,7 +57,7 @@ func getWithdrawFromReq(r *http.Request) (models.Withdraw, error) {
 func getUsernameFromReq(r *http.Request) (string, error) {
 	// Получение имени пользователя
 	reqCtx := r.Context()
-	usernameRaw := reqCtx.Value(usernameKey)
+	usernameRaw := reqCtx.Value(ctxkeys.UsernameKey)
 	if usernameRaw == nil {
 		return "", errUsernameNotAvaliable
 	}
