@@ -9,7 +9,7 @@ import (
 )
 
 type TokenResolver interface {
-	DecryptToken(tokenString string) (*models.Token, error)
+	DecryptToken(tokenString string) (*models.Claims, error)
 }
 
 type AuthMiddleware struct {
@@ -64,10 +64,10 @@ func (m *AuthMiddleware) checkCookie(cookie *http.Cookie) (string, bool) {
 	}
 
 	// Расшифровка токена
-	token, err := m.resolver.DecryptToken(cookie.Value)
+	claims, err := m.resolver.DecryptToken(cookie.Value)
 	if err != nil {
 		return "", false
 	}
 
-	return token.UserName, true
+	return claims.UserName, true
 }

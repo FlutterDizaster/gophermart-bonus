@@ -96,6 +96,7 @@ func New(settings Settings) *API {
 
 // Функция запуска сервиса.
 // TODO: Не выходит при ошибке до получения сигнала через контекст.
+// Переделать.
 func (api *API) Start(ctx context.Context) error {
 	slog.Info("Starting API service")
 	defer slog.Info("API server succesfully stopped")
