@@ -13,6 +13,7 @@ import (
 
 type BalanceManager interface {
 	Get(ctx context.Context, username string) (models.Balance, error)
+	ProcessWithdraw(ctx context.Context, username string, withdraw models.Withdraw) error
 }
 
 type OrderManager interface {

@@ -31,6 +31,28 @@ func getCredentialsFromReq(r *http.Request) (models.Credentials, error) {
 	return cred, nil
 }
 
+func getWithdrawFromReq(r *http.Request) (models.Withdraw, error) {
+	var withdraw models.Withdraw
+	var buf bytes.Buffer
+
+	// Проверка Content-Type
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		return withdraw, errWrongRequest
+	}
+
+	// Чтение тела запроса
+	if _, err := buf.ReadFrom(r.Body); err != nil {
+		return withdraw, errWrongRequest
+	}
+
+	// Unmarshal тела запроса
+	if err := withdraw.UnmarshalJSON(buf.Bytes()); err != nil {
+		return withdraw, errWrongRequest
+	}
+
+	return withdraw, nil
+}
+
 func getUsernameFromReq(r *http.Request) (string, error) {
 	// Получение имени пользователя
 	reqCtx := r.Context()
