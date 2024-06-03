@@ -1,0 +1,6 @@
+* text=auto
+
+*.go text
+
+*.mod text eol=lf
+*.sum text eol=lf
