@@ -11,7 +11,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type BonusManager interface {
+type BalanceManager interface {
+	Get(ctx context.Context, username string) (models.Balance, error)
 }
 
 type OrderManager interface {
@@ -33,26 +34,26 @@ const (
 )
 
 type Settings struct {
-	OrderMgr OrderManager
-	BonusMgr BonusManager
-	UserMgr  UserManager
-	Addr     string
+	OrderMgr   OrderManager
+	BalanceMgr BalanceManager
+	UserMgr    UserManager
+	Addr       string
 }
 
 type API struct {
-	orderMgr OrderManager
-	bonusMgr BonusManager
-	userMgr  UserManager
-	server   *http.Server
+	orderMgr   OrderManager
+	BalanceMgr BalanceManager
+	userMgr    UserManager
+	server     *http.Server
 }
 
 func New(settings Settings) *API {
 	slog.Debug("Creating API service")
 	// Создание экземпляра API
 	api := &API{
-		orderMgr: settings.OrderMgr,
-		bonusMgr: settings.BonusMgr,
-		userMgr:  settings.UserMgr,
+		orderMgr:   settings.OrderMgr,
+		BalanceMgr: settings.BalanceMgr,
+		userMgr:    settings.UserMgr,
 	}
 
 	// Создание роутера
@@ -81,6 +82,7 @@ func New(settings Settings) *API {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	})
 
+	// Создание http сервера
 	api.server = &http.Server{
 		Addr:    settings.Addr,
 		Handler: r,
