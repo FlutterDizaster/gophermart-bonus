@@ -2,8 +2,11 @@ package usermanager
 
 import (
 	"context"
+	"encoding/hex"
 
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
+	serr "github.com/FlutterDizaster/gophermart-bonus/internal/shared-errors"
+	"github.com/FlutterDizaster/gophermart-bonus/pkg/validation"
 )
 
 type UserRepository interface {
@@ -12,33 +15,49 @@ type UserRepository interface {
 }
 
 type TokenResolver interface {
-	// DecryptToken(tokenString string) (*models.Claims, error)
-	CreateToken(claims models.Claims) (string, error)
+	CreateToken(issuer, subject string) (string, error)
 }
 
 type Settings struct {
-	UsrRepo     UserRepository
-	TknResolver TokenResolver
+	Repo     UserRepository
+	Resolver TokenResolver
 }
 
 type UserManager struct {
-	usrRepo     UserRepository
-	tknResolver TokenResolver
+	repo     UserRepository
+	resolver TokenResolver
 }
 
 func New(settings Settings) *UserManager {
 	return &UserManager{
-		usrRepo:     settings.UsrRepo,
-		tknResolver: settings.TknResolver,
+		repo:     settings.Repo,
+		resolver: settings.Resolver,
 	}
 }
 
-func (um *UserManager) Register(context.Context, models.Credentials) (string, error) {
-	// Добавление пользователя в репозиторий
+func (um *UserManager) Register(ctx context.Context, cred models.Credentials) (string, error) {
+	// Подсчет хеша пароля
+	passHash := validation.CalculateHashSHA256([]byte(cred.Password))
 
-	return "", nil
+	// Добавление пользователя в репозиторий
+	err := um.repo.AddUser(ctx, cred.Login, hex.EncodeToString(passHash))
+	if err != nil {
+		return "", err
+	}
+
+	// Возврат нового токена
+	return um.resolver.CreateToken("gophermart-bonus", cred.Login)
 }
 
-func (um *UserManager) Login(context.Context, models.Credentials) (string, error) {
-	return "", nil
+func (um *UserManager) Login(ctx context.Context, cred models.Credentials) (string, error) {
+	// Подсчет хеша пароля
+	passHash := validation.CalculateHashSHA256([]byte(cred.Password))
+
+	// Проверка есть ли в репозитории запись с подходящими данными
+	if !um.repo.UserExist(ctx, cred.Login, hex.EncodeToString(passHash)) {
+		return "", serr.ErrWrongLoginOrPassword
+	}
+
+	// Возврат нового токена
+	return um.resolver.CreateToken("gophermart-bonus", cred.Login)
 }

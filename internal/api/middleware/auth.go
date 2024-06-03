@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	ctxkeys "github.com/FlutterDizaster/gophermart-bonus/internal/context-keys"
-	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type TokenResolver interface {
-	DecryptToken(tokenString string) (*models.Claims, error)
+	DecryptToken(tokenString string) (*jwt.RegisteredClaims, error)
 }
 
 type AuthMiddleware struct {
@@ -69,5 +69,5 @@ func (m *AuthMiddleware) checkCookie(cookie *http.Cookie) (string, bool) {
 		return "", false
 	}
 
-	return claims.UserName, true
+	return claims.Subject, true
 }

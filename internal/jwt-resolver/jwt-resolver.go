@@ -2,24 +2,31 @@ package jwtresolver
 
 import (
 	"errors"
+	"time"
 
-	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type JWTResolver struct {
-	secret string
+type Settings struct {
+	Secret   string
+	TokenTTL time.Duration
 }
 
-func New(secret string) *JWTResolver {
+type JWTResolver struct {
+	secret   string
+	tokenTTL time.Duration
+}
+
+func New(settings Settings) *JWTResolver {
 	return &JWTResolver{
-		secret: secret,
+		secret:   settings.Secret,
+		tokenTTL: settings.TokenTTL,
 	}
 }
 
-func (res *JWTResolver) DecryptToken(tokenString string) (*models.Claims, error) {
+func (res *JWTResolver) DecryptToken(tokenString string) (*jwt.RegisteredClaims, error) {
 	// Создание структуры models.Token
-	claims := &models.Claims{}
+	claims := &jwt.RegisteredClaims{}
 
 	// Парсинг токена
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
@@ -37,11 +44,18 @@ func (res *JWTResolver) DecryptToken(tokenString string) (*models.Claims, error)
 	return claims, err
 }
 
-func (res *JWTResolver) CreateToken(claims models.Claims) (string, error) {
+func (res *JWTResolver) CreateToken(issuer, subject string) (string, error) {
+	// Создание данных токена
+	claims := jwt.RegisteredClaims{
+		Issuer:    issuer,
+		Subject:   subject,
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(res.tokenTTL)),
+	}
+
 	// Создание токена
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	// Создание строки токена
+	// Создание зашифрованной строки токена
 	tokenString, err := token.SignedString([]byte(res.secret))
 	if err != nil {
 		return "", err

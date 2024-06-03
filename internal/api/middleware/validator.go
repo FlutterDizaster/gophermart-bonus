@@ -20,7 +20,7 @@ type hashWriter struct {
 
 func (w *hashWriter) Write(data []byte) (int, error) {
 	// Подсчет хеша
-	hash := validation.CalculateHashSHA256(data, w.key)
+	hash := validation.CalculateHashSHA256WithKey(data, w.key)
 	// Установка хедера
 	w.Header().Set("HashSHA256", hex.EncodeToString(hash))
 	return w.ResponseWriter.Write(data)
@@ -64,7 +64,7 @@ func (h *Validator) Handle(next http.Handler) http.Handler {
 		r.Body.Close()
 
 		// Повторное хеширование тела запроса
-		hash := validation.CalculateHashSHA256(body, h.Key)
+		hash := validation.CalculateHashSHA256WithKey(body, h.Key)
 
 		// Сравнение хешей
 		if !bytes.Equal(hash, sampleHash) {
