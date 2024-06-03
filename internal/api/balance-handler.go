@@ -31,6 +31,5 @@ func (api *API) balanceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err = w.Write(body); err != nil {
 		slog.Error("error writing response", "error", err)
-		w.WriteHeader(http.StatusTeapot)
 	}
 }

@@ -36,6 +36,5 @@ func (api *API) ordersGETHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err = w.Write(body); err != nil {
 		slog.Error("writing response error", "error", err)
-		w.WriteHeader(http.StatusTeapot)
 	}
 }
