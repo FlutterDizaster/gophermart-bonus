@@ -1,7 +1,7 @@
 package models
 
 //easyjson:json
-type Withdraws []Withdraw
+type Withdrawals []Withdraw
 
 //go:generate easyjson -all withdraw.go
 type Withdraw struct {

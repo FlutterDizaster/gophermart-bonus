@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels(in *jlexer.Lexer, out *Withdraws) {
+func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels(in *jlexer.Lexer, out *Withdrawals) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -26,9 +26,9 @@ func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(Withdraws, 0, 4)
+				*out = make(Withdrawals, 0, 4)
 			} else {
-				*out = Withdraws{}
+				*out = Withdrawals{}
 			}
 		} else {
 			*out = (*out)[:0]
@@ -45,7 +45,7 @@ func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 		in.Consumed()
 	}
 }
-func easyjson4f4a6fc6EncodeGithubComFlutterDizasterGophermartBonusInternalModels(out *jwriter.Writer, in Withdraws) {
+func easyjson4f4a6fc6EncodeGithubComFlutterDizasterGophermartBonusInternalModels(out *jwriter.Writer, in Withdrawals) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
@@ -61,26 +61,26 @@ func easyjson4f4a6fc6EncodeGithubComFlutterDizasterGophermartBonusInternalModels
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v Withdraws) MarshalJSON() ([]byte, error) {
+func (v Withdrawals) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjson4f4a6fc6EncodeGithubComFlutterDizasterGophermartBonusInternalModels(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v Withdraws) MarshalEasyJSON(w *jwriter.Writer) {
+func (v Withdrawals) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson4f4a6fc6EncodeGithubComFlutterDizasterGophermartBonusInternalModels(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *Withdraws) UnmarshalJSON(data []byte) error {
+func (v *Withdrawals) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Withdraws) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *Withdrawals) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels(l, v)
 }
 func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels1(in *jlexer.Lexer, out *Withdraw) {

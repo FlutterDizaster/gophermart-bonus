@@ -40,6 +40,10 @@ func easyjsonBed2650eDecodeGithubComFlutterDizasterGophermartBonusInternalModels
 			out.Current = float64(in.Float64())
 		case "withdrawn":
 			out.Withdrawn = float64(in.Float64())
+		case "processed_at":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.ProcessedAt).UnmarshalJSON(data))
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -63,6 +67,11 @@ func easyjsonBed2650eEncodeGithubComFlutterDizasterGophermartBonusInternalModels
 		const prefix string = ",\"withdrawn\":"
 		out.RawString(prefix)
 		out.Float64(float64(in.Withdrawn))
+	}
+	if true {
+		const prefix string = ",\"processed_at\":"
+		out.RawString(prefix)
+		out.Raw((in.ProcessedAt).MarshalJSON())
 	}
 	out.RawByte('}')
 }
