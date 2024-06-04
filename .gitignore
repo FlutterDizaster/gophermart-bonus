@@ -23,3 +23,5 @@ vendor/
 .vscode
 
 binaries/
+
+.DS_Store
