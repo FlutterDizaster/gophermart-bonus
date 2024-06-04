@@ -31,11 +31,12 @@ type UserManager interface {
 }
 
 type Settings struct {
-	OrderMgr    OrderManager
-	BalanceMgr  BalanceManager
-	UserMgr     UserManager
-	Addr        string
-	Middlewares []middleware.Middleware
+	OrderMgr      OrderManager
+	BalanceMgr    BalanceManager
+	UserMgr       UserManager
+	Addr          string
+	TokenResolver middleware.TokenResolver
+	HashSumSecret string
 }
 
 type API struct {
@@ -58,9 +59,23 @@ func New(settings Settings) *API {
 	r := chi.NewRouter()
 
 	// Установка middlewares
-	for i := range settings.Middlewares {
-		r.Use(settings.Middlewares[i].Handle)
+	compressorMiddleware := middleware.Compressor{
+		MinDataLength: 1024,
 	}
+	r.Use(compressorMiddleware.Handle)
+
+	decompressorMiddleware := middleware.Decompressor{}
+	r.Use(decompressorMiddleware.Handle)
+
+	validatorMiddleware := middleware.Validator{
+		Key: []byte(settings.HashSumSecret),
+	}
+	r.Use(validatorMiddleware.Handle)
+
+	authMiddleware := middleware.AuthMiddleware{
+		Resolver: settings.TokenResolver,
+	}
+	r.Use(authMiddleware.Handle)
 
 	// Настройка роутинга
 	r.Route("/api/user", func(r chi.Router) {
@@ -95,12 +110,10 @@ func New(settings Settings) *API {
 }
 
 // Функция запуска сервиса.
-// TODO: Не выходит при ошибке до получения сигнала через контекст.
-// Переделать.
 func (api *API) Start(ctx context.Context) error {
 	slog.Info("Starting API service")
 	defer slog.Info("API server succesfully stopped")
-	eg := errgroup.Group{}
+	eg, egCtx := errgroup.WithContext(ctx)
 
 	eg.Go(func() error {
 		slog.Info("Listening...")
@@ -111,7 +124,7 @@ func (api *API) Start(ctx context.Context) error {
 		return nil
 	})
 
-	<-ctx.Done()
+	<-egCtx.Done()
 	eg.Go(func() error {
 		slog.Info("Shutingdown API service")
 		return api.server.Shutdown(context.TODO())

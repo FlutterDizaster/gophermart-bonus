@@ -13,7 +13,7 @@ type TokenResolver interface {
 }
 
 type AuthMiddleware struct {
-	resolver    TokenResolver
+	Resolver    TokenResolver
 	PublicPaths []string
 }
 
@@ -64,7 +64,7 @@ func (m *AuthMiddleware) checkCookie(cookie *http.Cookie) (string, bool) {
 	}
 
 	// Расшифровка токена
-	claims, err := m.resolver.DecryptToken(cookie.Value)
+	claims, err := m.Resolver.DecryptToken(cookie.Value)
 	if err != nil {
 		return "", false
 	}
