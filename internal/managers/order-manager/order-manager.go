@@ -2,7 +2,13 @@
 //
 // © 2024 Dmitriy Loginov
 //
-// Licensed under the MIT License. See the LICENSE.md file in the project root for more information.
+// Licensed under the MIT License.
+//
+// This file uses a third-party package chi licensed under MIT License.
+// This file uses a third-party package sync licensed under BSD-3-Clause License.
+// This file uses a third-party package time licensed under BSD-3-Clause License.
+//
+// See the LICENSE.md file in the project root for more information.
 //
 // https://github.com/FlutterDizaster/gophermart-bonus
 package ordermanager

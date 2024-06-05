@@ -2,7 +2,11 @@
 //
 // © 2024 Dmitriy Loginov
 //
-// Licensed under the MIT License. See the LICENSE.md file in the project root for more information.
+// Licensed under the MIT License.
+//
+// This file uses a third-party package jwt licensed under MIT License.
+//
+// See the LICENSE.md file in the project root for more information.
 //
 // https://github.com/FlutterDizaster/gophermart-bonus
 package jwtresolver
