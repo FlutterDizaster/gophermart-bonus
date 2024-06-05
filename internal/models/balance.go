@@ -8,3 +8,9 @@ type Balance struct {
 	Withdrawn   float64   `json:"withdrawn"`
 	ProcessedAt time.Time `json:"processed_at,omitempty"`
 }
+
+type Accrue struct {
+	Username string
+	Amount   float64
+	OrderID  uint64
+}
