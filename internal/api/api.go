@@ -82,10 +82,16 @@ func New(settings Settings) *API {
 	validatorMiddleware := middleware.Validator{
 		Key: []byte(settings.HashSumSecret),
 	}
-	r.Use(validatorMiddleware.Handle)
+	if settings.HashSumSecret != "" {
+		r.Use(validatorMiddleware.Handle)
+	}
 
 	authMiddleware := middleware.AuthMiddleware{
 		Resolver: settings.TokenResolver,
+		PublicPaths: []string{
+			"/api/user/register",
+			"/api/user/login",
+		},
 	}
 	r.Use(authMiddleware.Handle)
 

@@ -25,6 +25,7 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/time v0.5.0
 )

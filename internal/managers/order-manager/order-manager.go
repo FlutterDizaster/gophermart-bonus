@@ -35,13 +35,8 @@ type OrderRepository interface {
 	GetNotUpdatedOrders(ctx context.Context) ([]uint64, error)
 }
 
-type BalanceManager interface {
-	Accrue(ctx context.Context, accrue models.Accrue) error
-}
-
 type Settings struct {
 	OrderRepo   OrderRepository
-	Balance     BalanceManager
 	AccrualAddr string
 }
 
