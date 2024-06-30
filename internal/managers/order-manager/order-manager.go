@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -60,8 +61,13 @@ func New(settings Settings) *OrderManager {
 }
 
 func (om *OrderManager) Start(ctx context.Context) error {
-	updateList, err := om.repo.GetNotUpdatedOrders(ctx)
+	eg, egCtx := errgroup.WithContext(ctx)
+	om.eg = eg
+
+	slog.Debug("Starting order manager service")
+	updateList, err := om.repo.GetNotUpdatedOrders(egCtx)
 	if err != nil {
+		slog.Error("order manager error", slog.Any("error", err))
 		return err
 	}
 
@@ -69,19 +75,25 @@ func (om *OrderManager) Start(ctx context.Context) error {
 		orderID := updateList[i]
 		// Создание задачи на обновление метрики
 		om.eg.Go(func() error {
-			return om.sheduleUpdate(ctx, orderID)
+			return om.sheduleUpdate(egCtx, orderID)
 		})
 	}
 
-	<-ctx.Done()
+	<-egCtx.Done()
 	return om.eg.Wait()
 }
 
 func (om *OrderManager) Get(ctx context.Context, userID uint64) (models.Orders, error) {
+	slog.Debug("getting orders for user", slog.Uint64("user id", userID))
 	return om.repo.GetAllOrders(ctx, userID)
 }
 
 func (om *OrderManager) Register(ctx context.Context, userID uint64, orderID uint64) error {
+	slog.Debug(
+		"Adding order to the repo",
+		slog.Uint64("order id", orderID),
+		slog.Uint64("user id", userID),
+	)
 	// Добавление заказа в репо
 	order := models.Order{
 		ID:     orderID,
@@ -102,6 +114,7 @@ func (om *OrderManager) Register(ctx context.Context, userID uint64, orderID uin
 }
 
 func (om *OrderManager) sheduleUpdate(ctx context.Context, orderID uint64) error {
+	slog.Debug("sheduling order update", slog.Uint64("order id", orderID))
 	// Рассчет баллов через внешнюю систему
 	order, err := om.calculateOrder(ctx, orderID)
 	if err != nil {

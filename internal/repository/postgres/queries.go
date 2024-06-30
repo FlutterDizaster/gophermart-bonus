@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS users (
 );`
 	createOrdersTable = `
 CREATE TABLE IF NOT EXISTS orders (
-    id INTEGER PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     user_id BIGINT NOT NULL,
     status VARCHAR NOT NULL,
     accrual DOUBLE PRECISION,
