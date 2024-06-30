@@ -50,6 +50,7 @@ func (repo *Repository) Start(ctx context.Context) error {
 	slog.Info("Starting Repository service")
 	err := repo.checkAndCreateTables(ctx)
 	if err != nil {
+		slog.Error("error creating tables", slog.Any("error", err))
 		return err
 	}
 

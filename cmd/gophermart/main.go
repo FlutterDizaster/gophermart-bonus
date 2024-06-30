@@ -93,6 +93,7 @@ func loadConfig() server.Settings {
 		defaultAccrual,
 		"Accrual service endpoint",
 	)
+	flag.Parse()
 
 	return lookupEnvs(settings)
 }

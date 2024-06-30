@@ -21,11 +21,11 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
 	"github.com/go-resty/resty/v2"
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 )
 
@@ -46,7 +46,9 @@ type OrderManager struct {
 	accrualAddr string
 	client      *resty.Client
 	limiter     *rate.Limiter
-	eg          *errgroup.Group
+	wg          *sync.WaitGroup
+	errCh       chan error
+	updateCtx   context.Context
 }
 
 func New(settings Settings) *OrderManager {
@@ -55,17 +57,19 @@ func New(settings Settings) *OrderManager {
 		accrualAddr: settings.AccrualAddr,
 		client:      resty.New(),
 		limiter:     rate.NewLimiter(rate.Inf, 0),
+		wg:          &sync.WaitGroup{},
+		errCh:       make(chan error, 1),
 	}
 
 	return om
 }
 
 func (om *OrderManager) Start(ctx context.Context) error {
-	eg, egCtx := errgroup.WithContext(ctx)
-	om.eg = eg
-
 	slog.Debug("Starting order manager service")
-	updateList, err := om.repo.GetNotUpdatedOrders(egCtx)
+
+	om.updateCtx = ctx
+
+	updateList, err := om.repo.GetNotUpdatedOrders(ctx)
 	if err != nil {
 		slog.Error("order manager error", slog.Any("error", err))
 		return err
@@ -74,13 +78,25 @@ func (om *OrderManager) Start(ctx context.Context) error {
 	for i := range updateList {
 		orderID := updateList[i]
 		// Создание задачи на обновление метрики
-		om.eg.Go(func() error {
-			return om.sheduleUpdate(egCtx, orderID)
-		})
+		om.wg.Add(1)
+		go func() {
+			om.errCh <- om.sheduleUpdate(ctx, orderID)
+			om.wg.Done()
+		}()
 	}
 
-	<-egCtx.Done()
-	return om.eg.Wait()
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		case err = <-om.errCh:
+			slog.Error("order manager error", slog.Any("error", err))
+		}
+	}
+
+	om.wg.Wait()
+	return nil
 }
 
 func (om *OrderManager) Get(ctx context.Context, userID uint64) (models.Orders, error) {
@@ -106,9 +122,11 @@ func (om *OrderManager) Register(ctx context.Context, userID uint64, orderID uin
 	}
 
 	// Создание задачи на обновление метрики
-	om.eg.Go(func() error {
-		return om.sheduleUpdate(ctx, orderID)
-	})
+	om.wg.Add(1)
+	go func() {
+		om.errCh <- om.sheduleUpdate(om.updateCtx, orderID)
+		om.wg.Done()
+	}()
 
 	return nil
 }
@@ -118,6 +136,7 @@ func (om *OrderManager) sheduleUpdate(ctx context.Context, orderID uint64) error
 	// Рассчет баллов через внешнюю систему
 	order, err := om.calculateOrder(ctx, orderID)
 	if err != nil {
+		slog.Error("error calculating order", slog.Any("error", err))
 		return err
 	}
 
@@ -128,7 +147,11 @@ func (om *OrderManager) sheduleUpdate(ctx context.Context, orderID uint64) error
 	}
 
 	// Обновляем статус в репо
-	return om.repo.UpdateOrder(ctx, order)
+	err = om.repo.UpdateOrder(ctx, order)
+	if err != nil {
+		slog.Error("error updating order", slog.Any("error", err))
+	}
+	return err
 }
 
 func (om *OrderManager) calculateOrder(ctx context.Context, orderID uint64) (models.Order, error) {
@@ -142,7 +165,7 @@ func (om *OrderManager) calculateOrder(ctx context.Context, orderID uint64) (mod
 	req := om.client.R().SetContext(ctx)
 
 	// Запрос к сервису рассчета балов
-	resp, err := req.Get(fmt.Sprintf("%s/api/orders/%d", om.accrualAddr, orderID))
+	resp, err := req.Get(fmt.Sprintf("http://%s/api/orders/%d", om.accrualAddr, orderID))
 	if err != nil {
 		return models.Order{}, err
 	}
