@@ -63,6 +63,7 @@ func New(settings Settings) *OrderManager {
 }
 
 func (om *OrderManager) Get(ctx context.Context, username string) (models.Orders, error) {
+	// TODO: сортировка по дате
 	return om.repo.GetAll(ctx, username)
 }
 

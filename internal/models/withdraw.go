@@ -11,11 +11,14 @@
 // https://github.com/FlutterDizaster/gophermart-bonus
 package models
 
+import "time"
+
 //easyjson:json
 type Withdrawals []Withdraw
 
 //go:generate easyjson -all withdraw.go
 type Withdraw struct {
-	OrderID uint64  `json:"order"`
-	Sum     float64 `json:"sum"`
+	OrderID     uint64    `json:"order"`
+	Sum         float64   `json:"sum"`
+	ProcessedAt time.Time `json:"processed_at,omitempty"`
 }

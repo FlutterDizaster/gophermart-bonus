@@ -40,10 +40,6 @@ func easyjsonBed2650eDecodeGithubComFlutterDizasterGophermartBonusInternalModels
 			out.Current = float64(in.Float64())
 		case "withdrawn":
 			out.Withdrawn = float64(in.Float64())
-		case "processed_at":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.ProcessedAt).UnmarshalJSON(data))
-			}
 		default:
 			in.SkipRecursive()
 		}
@@ -67,11 +63,6 @@ func easyjsonBed2650eEncodeGithubComFlutterDizasterGophermartBonusInternalModels
 		const prefix string = ",\"withdrawn\":"
 		out.RawString(prefix)
 		out.Float64(float64(in.Withdrawn))
-	}
-	if true {
-		const prefix string = ",\"processed_at\":"
-		out.RawString(prefix)
-		out.Raw((in.ProcessedAt).MarshalJSON())
 	}
 	out.RawByte('}')
 }
@@ -98,4 +89,84 @@ func (v *Balance) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Balance) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonBed2650eDecodeGithubComFlutterDizasterGophermartBonusInternalModels(l, v)
+}
+func easyjsonBed2650eDecodeGithubComFlutterDizasterGophermartBonusInternalModels1(in *jlexer.Lexer, out *Accrue) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "Username":
+			out.Username = string(in.String())
+		case "Amount":
+			out.Amount = float64(in.Float64())
+		case "OrderID":
+			out.OrderID = uint64(in.Uint64())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonBed2650eEncodeGithubComFlutterDizasterGophermartBonusInternalModels1(out *jwriter.Writer, in Accrue) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"Username\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Username))
+	}
+	{
+		const prefix string = ",\"Amount\":"
+		out.RawString(prefix)
+		out.Float64(float64(in.Amount))
+	}
+	{
+		const prefix string = ",\"OrderID\":"
+		out.RawString(prefix)
+		out.Uint64(uint64(in.OrderID))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v Accrue) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonBed2650eEncodeGithubComFlutterDizasterGophermartBonusInternalModels1(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v Accrue) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonBed2650eEncodeGithubComFlutterDizasterGophermartBonusInternalModels1(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *Accrue) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonBed2650eDecodeGithubComFlutterDizasterGophermartBonusInternalModels1(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Accrue) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonBed2650eDecodeGithubComFlutterDizasterGophermartBonusInternalModels1(l, v)
 }
