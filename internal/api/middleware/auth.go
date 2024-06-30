@@ -14,6 +14,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	ctxkeys "github.com/FlutterDizaster/gophermart-bonus/internal/context-keys"
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
@@ -32,11 +33,15 @@ var _ Middleware = &AuthMiddleware{}
 
 func (m *AuthMiddleware) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/") { //TODO: поправить
+			r.URL.Path += "/"
+		}
 		// Проверка URL на наличие в списке публичных
 		for i := range m.PublicPaths {
 			// Если есть совпадение, то пропуск проверки
 			if m.PublicPaths[i] == r.URL.Path {
 				next.ServeHTTP(w, r)
+				return
 			}
 		}
 
