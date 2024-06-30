@@ -12,6 +12,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
@@ -26,6 +27,7 @@ type Repository struct {
 }
 
 func New(conn string) (*Repository, error) {
+	slog.Info("Creating Repository")
 	repo := &Repository{}
 
 	// Создание экземпляра DB
@@ -45,6 +47,7 @@ func New(conn string) (*Repository, error) {
 }
 
 func (repo *Repository) Start(ctx context.Context) error {
+	slog.Info("Starting Repository service")
 	err := repo.checkAndCreateTables(ctx)
 	if err != nil {
 		return err
@@ -288,7 +291,19 @@ func (repo *Repository) AddUser(ctx context.Context, username, passHash string) 
 }
 
 func (repo *Repository) checkAndCreateTables(ctx context.Context) error {
-	_, err := repo.db.Exec(ctx, checkCreateTablesQuery)
+	slog.Debug("Creating tables")
+	_, err := repo.db.Exec(ctx, createUsersTable)
+	if err != nil {
+		return err
+	}
+	_, err = repo.db.Exec(ctx, createOrdersTable)
+	if err != nil {
+		return err
+	}
+	_, err = repo.db.Exec(ctx, createWithdrawlsTable)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }

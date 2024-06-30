@@ -63,26 +63,25 @@ VALUES ($1, $2)
 RETURNING id;
 `
 
-	checkCreateTablesQuery = `
+	createUsersTable = `
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY NOT NULL,
     username VARCHAR UNIQUE NOT NULL,
     pass_hash VARCHAR NOT NULL
-);
-
+);`
+	createOrdersTable = `
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY NOT NULL,
-    user_id BIGINT NOT NULL REFERENCES users(id),
+    user_id BIGINT NOT NULL,
     status VARCHAR NOT NULL,
     accrual DOUBLE PRECISION,
     uploaded_at TIMESTAMP NOT NULL
-);
-
+);`
+	createWithdrawlsTable = `
 CREATE TABLE IF NOT EXISTS withdrawls (
     id SERIAL PRIMARY KEY NOT NULL,
-    order_id BIGINT NOT NULL REFERENCES orders(id),
-    user_id BIGINT NOT NULL REFERENCES users(id),
+    order_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
     sum DOUBLE PRECISION NOT NULL
-);
-`
+);`
 )

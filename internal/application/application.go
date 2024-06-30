@@ -44,6 +44,7 @@ func (a *Application) Start(ctx context.Context) error {
 		eg.Go(func() error {
 			return service.Start(egCtx)
 		})
+		time.Sleep(1 * time.Second) // fix later
 	}
 
 	// ожидание завершения контекста
