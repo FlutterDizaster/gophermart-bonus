@@ -25,7 +25,7 @@ func (api *API) ordersPOSTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получение имени пользователя
-	username, err := getUsernameFromReq(r)
+	userID, err := getUserIDFromReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -55,7 +55,7 @@ func (api *API) ordersPOSTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Регистрация заказа
-	err = api.orderMgr.Register(r.Context(), username, orderID)
+	err = api.orderMgr.Register(r.Context(), userID, orderID)
 	switch {
 	case errors.Is(err, serr.ErrOrderAlreadyLoaded):
 		w.WriteHeader(http.StatusOK)

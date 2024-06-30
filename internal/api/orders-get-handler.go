@@ -8,27 +8,29 @@
 package api
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
+
+	sharederrors "github.com/FlutterDizaster/gophermart-bonus/internal/shared-errors"
 )
 
 func (api *API) ordersGETHandler(w http.ResponseWriter, r *http.Request) {
 	// Получение имени пользователя
-	username, err := getUsernameFromReq(r)
+	userID, err := getUserIDFromReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Получение заказов пользователя
-	orders, err := api.orderMgr.Get(r.Context(), username)
+	orders, err := api.orderMgr.Get(r.Context(), userID)
 	if err != nil {
+		if errors.Is(err, sharederrors.ErrNoOrdersFound) {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if len(orders) == 0 {
-		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 

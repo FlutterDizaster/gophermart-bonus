@@ -7,8 +7,6 @@
 // https://github.com/FlutterDizaster/gophermart-bonus
 package models
 
-import "time"
-
 type OrderStatus string
 
 const (
@@ -26,5 +24,5 @@ type Order struct {
 	ID         uint64      `json:"number"`
 	Status     OrderStatus `json:"status"`
 	Accrual    *float64    `json:"accrual,omitempty"`
-	UploadedAt time.Time   `json:"uploaded_at"`
+	UploadedAt string      `json:"uploaded_at"`
 }

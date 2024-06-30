@@ -117,9 +117,7 @@ func easyjson120d1ca2DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 				*out.Accrual = float64(in.Float64())
 			}
 		case "uploaded_at":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.UploadedAt).UnmarshalJSON(data))
-			}
+			out.UploadedAt = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -152,7 +150,7 @@ func easyjson120d1ca2EncodeGithubComFlutterDizasterGophermartBonusInternalModels
 	{
 		const prefix string = ",\"uploaded_at\":"
 		out.RawString(prefix)
-		out.Raw((in.UploadedAt).MarshalJSON())
+		out.String(string(in.UploadedAt))
 	}
 	out.RawByte('}')
 }

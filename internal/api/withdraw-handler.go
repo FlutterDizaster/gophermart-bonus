@@ -23,14 +23,14 @@ func (api *API) withdrawHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получение имени пользователя
-	username, err := getUsernameFromReq(r)
+	userID, err := getUserIDFromReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Проведение списания
-	err = api.BalanceMgr.ProcessWithdraw(r.Context(), username, withdraw)
+	err = api.BalanceMgr.ProcessWithdraw(r.Context(), userID, withdraw)
 	switch {
 	case errors.Is(err, serr.ErrNotEnoughFunds):
 		w.WriteHeader(http.StatusPaymentRequired)

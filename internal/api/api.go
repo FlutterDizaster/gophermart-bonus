@@ -25,16 +25,16 @@ import (
 )
 
 type BalanceManager interface {
-	Get(ctx context.Context, username string) (models.Balance, error)
-	ProcessWithdraw(ctx context.Context, username string, withdraw models.Withdraw) error
-	GetWithdrawals(ctx context.Context, username string) (models.Withdrawals, error)
+	Get(ctx context.Context, userID uint64) (models.Balance, error)
+	ProcessWithdraw(ctx context.Context, userID uint64, withdraw models.Withdraw) error
+	GetWithdrawals(ctx context.Context, userID uint64) (models.Withdrawals, error)
 }
 
 type OrderManager interface {
-	Register(ctx context.Context, username string, orderID uint64) error
+	Register(ctx context.Context, userID uint64, orderID uint64) error
 
 	//TODO: Должен отдавать отсортированный слайс
-	Get(ctx context.Context, username string) (models.Orders, error)
+	Get(ctx context.Context, userID uint64) (models.Orders, error)
 }
 
 type UserManager interface {

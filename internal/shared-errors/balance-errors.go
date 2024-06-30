@@ -13,4 +13,5 @@ var (
 	ErrNotEnoughFunds     = errors.New("error not enougs funds")
 	ErrWithdrawNotAllowed = errors.New("error withdraw not allowed")
 	ErrWrongOrderID       = errors.New("error wrong order id")
+	ErrNoWithdrawalsFound = errors.New("error no withdrawals found")
 )

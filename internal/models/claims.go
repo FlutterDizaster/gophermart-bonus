@@ -5,10 +5,11 @@
 // Licensed under the MIT License. See the LICENSE.md file in the project root for more information.
 //
 // https://github.com/FlutterDizaster/gophermart-bonus
-package ctxkeys
+package models
 
-type Key int
+import "github.com/golang-jwt/jwt/v4"
 
-const (
-	UserID Key = iota
-)
+type Claims struct {
+	jwt.RegisteredClaims
+	UserID uint64
+}

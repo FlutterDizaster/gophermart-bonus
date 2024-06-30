@@ -1,0 +1,294 @@
+// This file is part of the gophermart-bonus project
+//
+// © 2024 Dmitriy Loginov
+//
+// Licensed under the MIT License.
+//
+// See the LICENSE.md file in the project root for more information.
+//
+// https://github.com/FlutterDizaster/gophermart-bonus
+package postgres
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
+	sharederrors "github.com/FlutterDizaster/gophermart-bonus/internal/shared-errors"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type Repository struct {
+	db *pgxpool.Pool
+}
+
+func New(conn string) (*Repository, error) {
+	repo := &Repository{}
+
+	// Создание экземпляра DB
+	poolConfig, err := pgxpool.ParseConfig(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	repo.db = db
+
+	return repo, nil
+}
+
+func (repo *Repository) Start(ctx context.Context) error {
+	err := repo.checkAndCreateTables(ctx)
+	if err != nil {
+		return err
+	}
+
+	<-ctx.Done()
+	return nil
+}
+
+func (repo *Repository) GetUserBalance(
+	ctx context.Context,
+	userID uint64,
+) (models.Balance, error) {
+	balance := models.Balance{}
+
+	err := repo.db.QueryRow(ctx, userBalanceQuery, userID).
+		Scan(&balance.Current, &balance.Withdrawn)
+	if err != nil {
+		return models.Balance{}, err
+	}
+
+	return balance, nil
+}
+
+func (repo *Repository) GetUserWithdrawals(
+	ctx context.Context,
+	userID uint64,
+) (models.Withdrawals, error) {
+	withdrawals := make([]models.Withdraw, 0)
+
+	rows, err := repo.db.Query(ctx, userWithdrawalsQuery, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, sharederrors.ErrNoWithdrawalsFound
+		}
+		return nil, err
+	}
+
+	for rows.Next() {
+		var w models.Withdraw
+		var processedDate time.Time
+		err = rows.Scan(&w.OrderID, &w.Sum, &processedDate)
+		if err != nil {
+			return nil, err
+		}
+
+		w.ProcessedAt = processedDate.Format(time.RFC3339)
+
+		withdrawals = append(withdrawals, w)
+	}
+
+	return withdrawals, nil
+}
+
+func (repo *Repository) ProcessWithdraw(
+	ctx context.Context,
+	userID uint64,
+	withdraw models.Withdraw,
+) error {
+	// Получение баланса пользователя
+	balance, err := repo.GetUserBalance(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if balance.Current < withdraw.Sum {
+		return sharederrors.ErrNotEnoughFunds
+	}
+
+	// Проверка кем был добавлен заказ и есть ли он
+	var existingUserID uint64
+	err = repo.db.QueryRow(
+		ctx,
+		checkOrderQuery,
+		withdraw.OrderID,
+	).Scan(&existingUserID)
+	if err == nil {
+		if existingUserID != userID {
+			// Если заказ уже существует, но принадлежит другому пользователю
+			return sharederrors.ErrWithdrawNotAllowed
+		}
+	} else {
+		// Возвращаем необробатываемую ошибку
+		return err
+	}
+
+	// Проверка не было ли списаний по этому заказу
+	var status bool
+	err = repo.db.QueryRow(ctx, checkWithdrawQuery, withdraw.OrderID).Scan(&status)
+	if err != nil {
+		return err
+	}
+	if status {
+		return sharederrors.ErrWithdrawNotAllowed
+	}
+
+	// Списание средств
+	_, err = repo.db.Exec(
+		ctx,
+		processWithdrawQuery,
+		userID,
+		withdraw.OrderID,
+		withdraw.Sum,
+	)
+	return err
+}
+
+func (repo *Repository) AddOrder(ctx context.Context, userID uint64, order models.Order) error {
+	// Проверка существует ли заказ
+	var existingUserID uint64
+	err := repo.db.QueryRow(
+		ctx,
+		checkOrderQuery,
+		order.ID,
+	).Scan(&existingUserID)
+
+	if err == nil {
+		// Если заказ уже существует и принадлежит текущему пользователю
+		if existingUserID == userID {
+			return sharederrors.ErrOrderAlreadyLoaded
+		}
+		// Если заказ уже существует, но принадлежит другому пользователю
+		return sharederrors.ErrOrderLoadedByAnotherUsr
+	}
+
+	// Если произошла ошибка, и она не связана с отсутствием записи
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+
+	// Добавление нового заказа
+	_, err = repo.db.Exec(
+		ctx,
+		addOrderQuery,
+		order.ID,
+		userID,
+		order.Status,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo *Repository) UpdateOrder(ctx context.Context, order models.Order) error {
+	_, err := repo.db.Exec(
+		ctx,
+		updateOrderQuery,
+		order.ID,
+		order.Status,
+		order.Accrual,
+	)
+	return err
+}
+
+func (repo *Repository) GetAllOrders(ctx context.Context, userID uint64) (models.Orders, error) {
+	rows, err := repo.db.Query(
+		ctx,
+		getUserOrdersQuery,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	orders := make([]models.Order, 0)
+
+	for rows.Next() {
+		var order models.Order
+
+		var uploadDate time.Time
+
+		err = rows.Scan(&order.ID, &order.Status, &order.Accrual, &uploadDate)
+		if err != nil {
+			return nil, err
+		}
+
+		order.UploadedAt = uploadDate.Format(time.RFC3339)
+
+		orders = append(orders, order)
+	}
+	if len(orders) == 0 {
+		return nil, sharederrors.ErrNoOrdersFound
+	}
+
+	return orders, nil
+}
+
+func (repo *Repository) GetNotUpdatedOrders(ctx context.Context) ([]uint64, error) {
+	rows, err := repo.db.Query(ctx, getNotUpdatedOrdersQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	orders := make([]uint64, 0)
+
+	for rows.Next() {
+		var orderID uint64
+
+		err = rows.Scan(&orderID)
+		if err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, orderID)
+	}
+
+	return orders, nil
+}
+
+func (repo *Repository) CheckUser(ctx context.Context, username, passHash string) (uint64, error) {
+	var userID uint64
+	err := repo.db.QueryRow(ctx, checkUserQuery, username, passHash).Scan(&userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, sharederrors.ErrWrongLoginOrPassword
+		}
+
+		return 0, err
+	}
+	return userID, nil
+}
+
+func (repo *Repository) AddUser(ctx context.Context, username, passHash string) (uint64, error) {
+	var userID uint64
+	err := repo.db.QueryRow(ctx, addUserQuery, username, passHash).Scan(&userID)
+
+	if err != nil {
+		pgErr := &pgconn.PgError{}
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return 0, sharederrors.ErrUserAlreadyExist
+			}
+		}
+
+		return 0, err
+	}
+
+	return userID, nil
+}
+
+func (repo *Repository) checkAndCreateTables(ctx context.Context) error {
+	_, err := repo.db.Exec(ctx, checkCreateTablesQuery)
+
+	return err
+}

@@ -26,7 +26,7 @@ func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(Withdrawals, 0, 1)
+				*out = make(Withdrawals, 0, 2)
 			} else {
 				*out = Withdrawals{}
 			}
@@ -107,9 +107,7 @@ func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 		case "sum":
 			out.Sum = float64(in.Float64())
 		case "processed_at":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.ProcessedAt).UnmarshalJSON(data))
-			}
+			out.ProcessedAt = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -134,10 +132,10 @@ func easyjson4f4a6fc6EncodeGithubComFlutterDizasterGophermartBonusInternalModels
 		out.RawString(prefix)
 		out.Float64(float64(in.Sum))
 	}
-	if true {
+	if in.ProcessedAt != "" {
 		const prefix string = ",\"processed_at\":"
 		out.RawString(prefix)
-		out.Raw((in.ProcessedAt).MarshalJSON())
+		out.String(string(in.ProcessedAt))
 	}
 	out.RawByte('}')
 }

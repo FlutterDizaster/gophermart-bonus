@@ -15,6 +15,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -35,9 +36,9 @@ func New(settings Settings) *JWTResolver {
 	}
 }
 
-func (res *JWTResolver) DecryptToken(tokenString string) (*jwt.RegisteredClaims, error) {
+func (res *JWTResolver) DecryptToken(tokenString string) (*models.Claims, error) {
 	// Создание структуры models.Token
-	claims := &jwt.RegisteredClaims{}
+	claims := &models.Claims{}
 
 	// Парсинг токена
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
@@ -55,12 +56,15 @@ func (res *JWTResolver) DecryptToken(tokenString string) (*jwt.RegisteredClaims,
 	return claims, err
 }
 
-func (res *JWTResolver) CreateToken(issuer, subject string) (string, error) {
+func (res *JWTResolver) CreateToken(issuer, subject string, userID uint64) (string, error) {
 	// Создание данных токена
-	claims := jwt.RegisteredClaims{
-		Issuer:    issuer,
-		Subject:   subject,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(res.tokenTTL)),
+	claims := models.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    issuer,
+			Subject:   subject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(res.tokenTTL)),
+		},
+		UserID: userID,
 	}
 
 	// Создание токена

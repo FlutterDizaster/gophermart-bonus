@@ -16,10 +16,9 @@ import (
 )
 
 type BalanceRepository interface {
-	GetUserBalance(ctx context.Context, username string) (models.Balance, error)
-	GetUserWithdrawals(ctx context.Context, username string) (models.Withdrawals, error)
-	ProcessWithdraw(ctx context.Context, username string, withdraw models.Withdraw) error
-	AccrueUserBalance(ctx context.Context, username string, accrue models.Accrue) error
+	GetUserBalance(ctx context.Context, userID uint64) (models.Balance, error)
+	GetUserWithdrawals(ctx context.Context, userID uint64) (models.Withdrawals, error)
+	ProcessWithdraw(ctx context.Context, userID uint64, withdraw models.Withdraw) error
 }
 
 type Settings struct {
@@ -36,25 +35,21 @@ func New(settings Settings) *BalanceManager {
 	}
 }
 
-func (m *BalanceManager) Get(ctx context.Context, username string) (models.Balance, error) {
-	return m.balanceRepo.GetUserBalance(ctx, username)
-}
-
-func (m *BalanceManager) Accrue(ctx context.Context, accrue models.Accrue) error {
-	return m.balanceRepo.AccrueUserBalance(ctx, accrue.Username, accrue)
+func (m *BalanceManager) Get(ctx context.Context, userID uint64) (models.Balance, error) {
+	return m.balanceRepo.GetUserBalance(ctx, userID)
 }
 
 func (m *BalanceManager) ProcessWithdraw(
 	ctx context.Context,
-	username string,
+	userID uint64,
 	withdraw models.Withdraw,
 ) error {
-	return m.balanceRepo.ProcessWithdraw(ctx, username, withdraw)
+	return m.balanceRepo.ProcessWithdraw(ctx, userID, withdraw)
 }
 
 func (m *BalanceManager) GetWithdrawals(
 	ctx context.Context,
-	username string,
+	userID uint64,
 ) (models.Withdrawals, error) {
-	return m.balanceRepo.GetUserWithdrawals(ctx, username)
+	return m.balanceRepo.GetUserWithdrawals(ctx, userID)
 }

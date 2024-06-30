@@ -8,26 +8,28 @@
 package api
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
+
+	sharederrors "github.com/FlutterDizaster/gophermart-bonus/internal/shared-errors"
 )
 
 func (api *API) withdrawalsHandler(w http.ResponseWriter, r *http.Request) {
 	// Получение имени пользователя
-	username, err := getUsernameFromReq(r)
+	userID, err := getUserIDFromReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	// Получение слайса списаний
-	withdrawals, err := api.BalanceMgr.GetWithdrawals(r.Context(), username)
+	withdrawals, err := api.BalanceMgr.GetWithdrawals(r.Context(), userID)
 	if err != nil {
+		if errors.Is(err, sharederrors.ErrNoWithdrawalsFound) {
+			w.WriteHeader((http.StatusNoContent))
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if len(withdrawals) == 0 {
-		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 

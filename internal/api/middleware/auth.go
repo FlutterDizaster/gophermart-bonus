@@ -16,11 +16,11 @@ import (
 	"net/http"
 
 	ctxkeys "github.com/FlutterDizaster/gophermart-bonus/internal/context-keys"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
 )
 
 type TokenResolver interface {
-	DecryptToken(tokenString string) (*jwt.RegisteredClaims, error)
+	DecryptToken(tokenString string) (*models.Claims, error)
 }
 
 type AuthMiddleware struct {
@@ -45,9 +45,9 @@ func (m *AuthMiddleware) Handle(next http.Handler) http.Handler {
 		for i := range cookies {
 			if cookies[i].Name == "Auth" {
 				// Проверка куки
-				if username, ok := m.checkCookie(cookies[i]); ok {
-					// Сохранение username в контекст
-					ctx := context.WithValue(r.Context(), ctxkeys.UsernameKey, username)
+				if userID, ok := m.checkCookie(cookies[i]); ok {
+					// Сохранение userID в контекст
+					ctx := context.WithValue(r.Context(), ctxkeys.UserID, userID)
 
 					// Создание нового запроса с контекстом
 					req := r.WithContext(ctx)
@@ -63,22 +63,22 @@ func (m *AuthMiddleware) Handle(next http.Handler) http.Handler {
 	})
 }
 
-// Проверяет cookie на валидность и возвращает первым аргументом username,
+// Проверяет cookie на валидность и возвращает первым аргументом userID,
 // а вторым статус проверки.
-// Если проверка пройдена успешно, то username будет содержать имя пользователя,
-// а статус будет true. Иначе username будет пустой строкой, а статус false.
-func (m *AuthMiddleware) checkCookie(cookie *http.Cookie) (string, bool) {
+// Если проверка пройдена успешно, то userID будет содержать имя пользователя,
+// а статус будет true. Иначе userID будет пустой строкой, а статус false.
+func (m *AuthMiddleware) checkCookie(cookie *http.Cookie) (uint64, bool) {
 	// Проверка cookie на валидность
 	err := cookie.Valid()
 	if err != nil {
-		return "", false
+		return 0, false
 	}
 
 	// Расшифровка токена
 	claims, err := m.Resolver.DecryptToken(cookie.Value)
 	if err != nil {
-		return "", false
+		return 0, false
 	}
 
-	return claims.Subject, true
+	return claims.UserID, true
 }

@@ -14,14 +14,14 @@ import (
 
 func (api *API) balanceHandler(w http.ResponseWriter, r *http.Request) {
 	// Получение имени пользователя
-	username, err := getUsernameFromReq(r)
+	userID, err := getUserIDFromReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Получение баланса пользователя
-	balance, err := api.BalanceMgr.Get(r.Context(), username)
+	balance, err := api.BalanceMgr.Get(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

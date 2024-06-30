@@ -61,18 +61,18 @@ func getWithdrawFromReq(r *http.Request) (models.Withdraw, error) {
 	return withdraw, nil
 }
 
-func getUsernameFromReq(r *http.Request) (string, error) {
-	// Получение имени пользователя
+func getUserIDFromReq(r *http.Request) (uint64, error) {
+	// Получение userID
 	reqCtx := r.Context()
-	usernameRaw := reqCtx.Value(ctxkeys.UsernameKey)
-	if usernameRaw == nil {
-		return "", errUsernameNotAvaliable
+	userIDRaw := reqCtx.Value(ctxkeys.UserID)
+	if userIDRaw == nil {
+		return 0, errUserIDNotAvaliable
 	}
-	username, ok := usernameRaw.(string)
+	userID, ok := userIDRaw.(uint64)
 	if !ok {
-		return "", errUsernameNotAvaliable
+		return 0, errUserIDNotAvaliable
 	}
-	return username, nil
+	return userID, nil
 }
 
 // Имплементация алгоритма Луна.

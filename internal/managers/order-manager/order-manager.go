@@ -29,8 +29,10 @@ import (
 )
 
 type OrderRepository interface {
-	Update(ctx context.Context, username string, order models.Order) error
-	GetAll(ctx context.Context, username string) (models.Orders, error)
+	AddOrder(ctx context.Context, userID uint64, order models.Order) error
+	UpdateOrder(ctx context.Context, order models.Order) error
+	GetAllOrders(ctx context.Context, userID uint64) (models.Orders, error)
+	GetNotUpdatedOrders(ctx context.Context) ([]uint64, error)
 }
 
 type BalanceManager interface {
@@ -45,7 +47,6 @@ type Settings struct {
 
 type OrderManager struct {
 	repo        OrderRepository
-	balance     BalanceManager
 	accrualAddr string
 	client      *resty.Client
 	limiter     *rate.Limiter
@@ -53,31 +54,59 @@ type OrderManager struct {
 }
 
 func New(settings Settings) *OrderManager {
-	return &OrderManager{
+	om := &OrderManager{
 		repo:        settings.OrderRepo,
-		balance:     settings.Balance,
 		accrualAddr: settings.AccrualAddr,
 		client:      resty.New(),
 		limiter:     rate.NewLimiter(rate.Inf, 0),
 	}
+
+	return om
 }
 
-func (om *OrderManager) Get(ctx context.Context, username string) (models.Orders, error) {
-	// TODO: сортировка по дате
-	return om.repo.GetAll(ctx, username)
+func (om *OrderManager) Start(ctx context.Context) error {
+	updateList, err := om.repo.GetNotUpdatedOrders(ctx)
+	if err != nil {
+		return err
+	}
+
+	for i := range updateList {
+		orderID := updateList[i]
+		// Создание задачи на обновление метрики
+		om.eg.Go(func() error {
+			return om.sheduleUpdate(ctx, orderID)
+		})
+	}
+
+	<-ctx.Done()
+	return om.eg.Wait()
 }
 
-func (om *OrderManager) Register(ctx context.Context, username string, orderID uint64) error {
+func (om *OrderManager) Get(ctx context.Context, userID uint64) (models.Orders, error) {
+	return om.repo.GetAllOrders(ctx, userID)
+}
+
+func (om *OrderManager) Register(ctx context.Context, userID uint64, orderID uint64) error {
 	// Добавление заказа в репо
-	return om.updateOrder(ctx, username, orderID, true)
+	order := models.Order{
+		ID:     orderID,
+		Status: models.StatusOrderNew,
+	}
+
+	err := om.repo.AddOrder(ctx, userID, order)
+	if err != nil {
+		return err
+	}
+
+	// Создание задачи на обновление метрики
+	om.eg.Go(func() error {
+		return om.sheduleUpdate(ctx, orderID)
+	})
+
+	return nil
 }
 
-func (om *OrderManager) updateOrder(
-	ctx context.Context,
-	username string,
-	orderID uint64,
-	async bool,
-) error {
+func (om *OrderManager) sheduleUpdate(ctx context.Context, orderID uint64) error {
 	// Рассчет баллов через внешнюю систему
 	order, err := om.calculateOrder(ctx, orderID)
 	if err != nil {
@@ -86,32 +115,12 @@ func (om *OrderManager) updateOrder(
 
 	// Проверка статуса рассчета баллов
 	if order.Status == models.StatusOrderNew || order.Status == models.StatusOrderProcessing {
-		// Ждем какое-то время
-		time.Sleep(1 * time.Second) // TODO: Костыль, переделать
-
 		// Повторно обновляем заказ
-		// в другой горутине, если необходимо
-		if async {
-			om.eg.Go(func() error {
-				return om.updateOrder(ctx, username, orderID, false)
-			})
-		} else {
-			return om.updateOrder(ctx, username, orderID, false)
-		}
-	} else if order.Status == models.StatusOrderProcessed && order.Accrual != nil {
-		// Начисление баллов
-		err = om.balance.Accrue(ctx, models.Accrue{
-			Username: username,
-			Amount:   *order.Accrual,
-			OrderID:  orderID,
-		})
-		if err != nil {
-			return err
-		}
+		return om.sheduleUpdate(ctx, orderID)
 	}
 
 	// Обновляем статус в репо
-	return om.repo.Update(ctx, username, order)
+	return om.repo.UpdateOrder(ctx, order)
 }
 
 func (om *OrderManager) calculateOrder(ctx context.Context, orderID uint64) (models.Order, error) {
