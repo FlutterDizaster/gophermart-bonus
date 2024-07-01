@@ -11,6 +11,7 @@ package balancemanager
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
 )
@@ -51,5 +52,10 @@ func (m *BalanceManager) GetWithdrawals(
 	ctx context.Context,
 	userID uint64,
 ) (models.Withdrawals, error) {
-	return m.balanceRepo.GetUserWithdrawals(ctx, userID)
+	withdrawals, err := m.balanceRepo.GetUserWithdrawals(ctx, userID)
+	for i, withdraw := range withdrawals {
+		withdraw.StringOrderID = strconv.FormatUint(withdraw.OrderID, 10)
+		withdrawals[i] = withdraw
+	}
+	return withdrawals, err
 }

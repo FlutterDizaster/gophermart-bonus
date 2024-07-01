@@ -26,7 +26,7 @@ func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(Withdrawals, 0, 2)
+				*out = make(Withdrawals, 0, 1)
 			} else {
 				*out = Withdrawals{}
 			}
@@ -103,7 +103,7 @@ func easyjson4f4a6fc6DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 		}
 		switch key {
 		case "order":
-			out.OrderID = uint64(in.Uint64())
+			out.StringOrderID = string(in.String())
 		case "sum":
 			out.Sum = float64(in.Float64())
 		case "processed_at":
@@ -124,8 +124,13 @@ func easyjson4f4a6fc6EncodeGithubComFlutterDizasterGophermartBonusInternalModels
 	_ = first
 	{
 		const prefix string = ",\"order\":"
-		out.RawString(prefix[1:])
-		out.Uint64(uint64(in.OrderID))
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.StringOrderID))
 	}
 	{
 		const prefix string = ",\"sum\":"

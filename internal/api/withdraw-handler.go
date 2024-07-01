@@ -9,7 +9,9 @@ package api
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
+	"strconv"
 
 	serr "github.com/FlutterDizaster/gophermart-bonus/internal/shared-errors"
 )
@@ -22,12 +24,31 @@ func (api *API) withdrawHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	withdraw.OrderID, err = strconv.ParseUint(withdraw.StringOrderID, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	// Получение имени пользователя
 	userID, err := getUserIDFromReq(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	slog.Debug(
+		"new withdraw request",
+		slog.Group(
+			"details",
+			slog.Uint64("user id", userID),
+			slog.Group(
+				"withdraw",
+				slog.Uint64("orderID", withdraw.OrderID),
+				slog.Float64("sum", withdraw.Sum),
+			),
+		),
+	)
 
 	// Проведение списания
 	err = api.BalanceMgr.ProcessWithdraw(r.Context(), userID, withdraw)

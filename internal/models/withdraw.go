@@ -16,7 +16,8 @@ type Withdrawals []Withdraw
 
 //go:generate easyjson -all withdraw.go
 type Withdraw struct {
-	OrderID     uint64  `json:"order"`
-	Sum         float64 `json:"sum"`
-	ProcessedAt string  `json:"processed_at,omitempty"`
+	OrderID       uint64  `json:"-"`
+	StringOrderID string  `json:"order"`
+	Sum           float64 `json:"sum"`
+	ProcessedAt   string  `json:"processed_at,omitempty"`
 }
