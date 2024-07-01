@@ -12,6 +12,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -70,6 +71,13 @@ func (repo *Repository) GetUserBalance(
 		return models.Balance{}, err
 	}
 
+	slog.Debug(
+		"user balance",
+		slog.Uint64("user id", userID),
+		slog.Float64("balance", balance.Current),
+		slog.Float64("withdrawn", balance.Withdrawn),
+	)
+
 	return balance, nil
 }
 
@@ -87,6 +95,9 @@ func (repo *Repository) GetUserWithdrawals(
 		return nil, err
 	}
 
+	slogslice := make([]slog.Attr, 0)
+	var counter int
+
 	for rows.Next() {
 		var w models.Withdraw
 		var processedDate time.Time
@@ -98,7 +109,30 @@ func (repo *Repository) GetUserWithdrawals(
 		w.ProcessedAt = processedDate.Format(time.RFC3339)
 
 		withdrawals = append(withdrawals, w)
+
+		slogslice = append(
+			slogslice,
+			slog.Group(
+				fmt.Sprintf("entry %d", counter),
+				slog.Uint64("order id", w.OrderID),
+				slog.Float64("sum", w.Sum),
+				slog.String("processed at", w.ProcessedAt),
+			),
+		)
+		counter++
 	}
+
+	slog.Debug(
+		"user withdrawals",
+		slog.Uint64(
+			"user id",
+			userID,
+		),
+		slog.Any(
+			"withdrawals",
+			slogslice,
+		),
+	)
 
 	return withdrawals, nil
 }
@@ -153,6 +187,17 @@ func (repo *Repository) ProcessWithdraw(
 		userID,
 		withdraw.Sum,
 	)
+
+	slog.Debug(
+		"process withdraw",
+		slog.Uint64("user id", userID),
+		slog.Group(
+			"withdraw",
+			slog.Uint64("order id", withdraw.OrderID),
+			slog.Float64("sum", withdraw.Sum),
+		),
+	)
+
 	return err
 }
 
@@ -191,6 +236,16 @@ func (repo *Repository) AddOrder(ctx context.Context, userID uint64, order model
 		return err
 	}
 
+	slog.Debug(
+		"add order",
+		slog.Uint64("user id", userID),
+		slog.Group(
+			"order",
+			slog.Uint64("id", order.ID),
+			slog.String("status", string(order.Status)),
+		),
+	)
+
 	return nil
 }
 
@@ -205,7 +260,19 @@ func (repo *Repository) UpdateOrder(ctx context.Context, order models.Order) err
 	if err != nil {
 		return err
 	}
-	slog.Info("order updated")
+	var slogAccr float64
+	if order.Accrual != nil {
+		slogAccr = *order.Accrual
+	}
+	slog.Info(
+		"update order",
+		slog.Group(
+			"order",
+			slog.Uint64("id", order.ID),
+			slog.String("status", string(order.Status)),
+			slog.Float64("accrual", slogAccr),
+		),
+	)
 	return nil
 }
 
