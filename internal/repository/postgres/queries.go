@@ -42,9 +42,9 @@ WHERE status IN ('NEW', 'PROCESSING');
 `
 
 	updateOrderQuery = `UPDATE orders
-SET status = $2,
-    accrual = $3
-WHERE id = $1;
+SET status = $1,
+    accrual = $2
+WHERE id = $3;
 `
 
 	getUserOrdersQuery = `SELECT id, status, accrual, uploaded_at
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS orders (
     uploaded_at TIMESTAMP NOT NULL
 );`
 	createWithdrawlsTable = `
-CREATE TABLE IF NOT EXISTS withdrawls (
+CREATE TABLE IF NOT EXISTS withdrawals (
     id SERIAL PRIMARY KEY NOT NULL,
     order_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,

@@ -16,6 +16,11 @@ func (api *API) balanceHandler(w http.ResponseWriter, r *http.Request) {
 	// Получение имени пользователя
 	userID, err := getUserIDFromReq(r)
 	if err != nil {
+		slog.Error(
+			"balance manager error",
+			slog.String("method", "getUserIDFromReq"),
+			slog.Any("error", err),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -23,6 +28,11 @@ func (api *API) balanceHandler(w http.ResponseWriter, r *http.Request) {
 	// Получение баланса пользователя
 	balance, err := api.BalanceMgr.Get(r.Context(), userID)
 	if err != nil {
+		slog.Error(
+			"balance manager error",
+			slog.String("method", "api.BalanceMgr.Get"),
+			slog.Any("error", err),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -30,6 +40,11 @@ func (api *API) balanceHandler(w http.ResponseWriter, r *http.Request) {
 	// Marshal ответа
 	body, err := balance.MarshalJSON()
 	if err != nil {
+		slog.Error(
+			"balance manager error",
+			slog.String("method", "MarshalJSON"),
+			slog.Any("error", err),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -80,7 +80,10 @@ func (om *OrderManager) Start(ctx context.Context) error {
 		// Создание задачи на обновление метрики
 		om.wg.Add(1)
 		go func() {
-			om.errCh <- om.sheduleUpdate(ctx, orderID)
+			err = om.sheduleUpdate(om.updateCtx, orderID)
+			if err != nil {
+				om.errCh <- err
+			}
 			om.wg.Done()
 		}()
 	}
@@ -124,7 +127,10 @@ func (om *OrderManager) Register(ctx context.Context, userID uint64, orderID uin
 	// Создание задачи на обновление метрики
 	om.wg.Add(1)
 	go func() {
-		om.errCh <- om.sheduleUpdate(om.updateCtx, orderID)
+		err = om.sheduleUpdate(om.updateCtx, orderID)
+		if err != nil {
+			om.errCh <- err
+		}
 		om.wg.Done()
 	}()
 
@@ -139,6 +145,7 @@ func (om *OrderManager) sheduleUpdate(ctx context.Context, orderID uint64) error
 		slog.Error("error calculating order", slog.Any("error", err))
 		return err
 	}
+	slog.Debug("Order calculated", slog.String("status", string(order.Status)))
 
 	// Проверка статуса рассчета баллов
 	if order.Status == models.StatusOrderNew || order.Status == models.StatusOrderProcessing {
@@ -155,6 +162,7 @@ func (om *OrderManager) sheduleUpdate(ctx context.Context, orderID uint64) error
 }
 
 func (om *OrderManager) calculateOrder(ctx context.Context, orderID uint64) (models.Order, error) {
+	slog.Debug("Calculating order")
 	// Ожидание свободного токена лимитера
 	err := om.limiter.Wait(ctx)
 	if err != nil {
@@ -191,6 +199,9 @@ func (om *OrderManager) calculateOrder(ctx context.Context, orderID uint64) (mod
 	if err != nil {
 		return models.Order{}, err
 	}
+
+	// фикс для несоответствия имен для поля order.id в приложении и в сервисе accrue
+	order.ID = orderID
 
 	return order, nil
 }

@@ -195,14 +195,24 @@ func (repo *Repository) AddOrder(ctx context.Context, userID uint64, order model
 }
 
 func (repo *Repository) UpdateOrder(ctx context.Context, order models.Order) error {
+	slog.Info("updating order", slog.Group(
+		"order",
+		slog.Uint64("id", order.ID),
+		slog.String("status", string(order.Status)),
+		slog.Float64("accrual", *order.Accrual),
+	))
 	_, err := repo.db.Exec(
 		ctx,
 		updateOrderQuery,
-		order.ID,
 		order.Status,
 		order.Accrual,
+		order.ID,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	slog.Info("order updated")
+	return nil
 }
 
 func (repo *Repository) GetAllOrders(ctx context.Context, userID uint64) (models.Orders, error) {
