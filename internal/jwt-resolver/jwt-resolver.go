@@ -1,0 +1,80 @@
+// This file is part of the gophermart-bonus project
+//
+// © 2024 Dmitriy Loginov
+//
+// Licensed under the MIT License.
+//
+// This file uses a third-party package jwt licensed under MIT License.
+//
+// See the LICENSE.md file in the project root for more information.
+//
+// https://github.com/FlutterDizaster/gophermart-bonus
+package jwtresolver
+
+import (
+	"errors"
+	"time"
+
+	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
+	"github.com/golang-jwt/jwt/v4"
+)
+
+type Settings struct {
+	Secret   string
+	TokenTTL time.Duration
+}
+
+type JWTResolver struct {
+	secret   string
+	tokenTTL time.Duration
+}
+
+func New(settings Settings) *JWTResolver {
+	return &JWTResolver{
+		secret:   settings.Secret,
+		tokenTTL: settings.TokenTTL,
+	}
+}
+
+func (res *JWTResolver) DecryptToken(tokenString string) (*models.Claims, error) {
+	// Создание структуры models.Token
+	claims := &models.Claims{}
+
+	// Парсинг токена
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("error unexpected signing method")
+		}
+		return []byte(res.secret), nil
+	})
+
+	// Проверка токена на валидность
+	if !token.Valid {
+		return claims, errors.New("error invalid token")
+	}
+
+	return claims, err
+}
+
+func (res *JWTResolver) CreateToken(issuer, subject string, userID uint64) (string, error) {
+	// Создание данных токена
+	claims := models.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    issuer,
+			Subject:   subject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(res.tokenTTL)),
+		},
+		UserID: userID,
+	}
+
+	// Создание токена
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Создание зашифрованной строки токена
+	tokenString, err := token.SignedString([]byte(res.secret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
