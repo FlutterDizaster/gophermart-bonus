@@ -238,6 +238,7 @@ func (om *OrderManager) updateLimiter(resp *resty.Response) error {
 	}
 
 	// Установка нового лимита
+	om.limiter.SetBurst(1)
 	om.limiter.SetLimitAt(
 		time.Now().Add(time.Duration(delay)*time.Second),
 		rate.Every(time.Minute/time.Duration(requests)),

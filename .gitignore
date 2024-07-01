@@ -25,3 +25,5 @@ vendor/
 binaries/
 
 .DS_Store
+
+*.key
