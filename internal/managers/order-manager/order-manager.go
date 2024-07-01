@@ -180,7 +180,11 @@ func (om *OrderManager) calculateOrder(ctx context.Context, orderID uint64) (mod
 	req := om.client.R().SetContext(ctx)
 
 	// Запрос к сервису рассчета балов
-	resp, err := req.Get(fmt.Sprintf("http://%s/api/orders/%d", om.accrualAddr, orderID))
+	addr := om.accrualAddr
+	if !strings.HasPrefix(addr, "http://") {
+		addr = fmt.Sprintf("http://%s", addr)
+	}
+	resp, err := req.Get(fmt.Sprintf("%s/api/orders/%d", addr, orderID))
 	if err != nil {
 		return models.Order{}, err
 	}
