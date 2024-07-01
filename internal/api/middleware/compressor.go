@@ -30,8 +30,7 @@ type gzipResponseWriter struct {
 
 // Write переопределение функции http.ResponseWriter.Write([]byte).
 func (w *gzipResponseWriter) Write(data []byte) (int, error) {
-	// TODO: переделать длинну порога
-	// Сжимаем данные только если их размер больше 75 байт
+	// Сжимаем данные только если их размер больше minDataLength байт
 	if len(data) > w.minDataLength {
 		// Получение доступа к пулу
 		pool := gzipCompressorPool()

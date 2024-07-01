@@ -17,6 +17,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/FlutterDizaster/gophermart-bonus/internal/api/middleware"
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
@@ -33,7 +34,6 @@ type BalanceManager interface {
 type OrderManager interface {
 	Register(ctx context.Context, userID uint64, orderID uint64) error
 
-	//TODO: Должен отдавать отсортированный слайс
 	Get(ctx context.Context, userID uint64) (models.Orders, error)
 }
 
@@ -49,6 +49,7 @@ type Settings struct {
 	Addr          string
 	TokenResolver middleware.TokenResolver
 	HashSumSecret string
+	CookieTTL     time.Duration
 }
 
 type API struct {
@@ -56,6 +57,7 @@ type API struct {
 	BalanceMgr BalanceManager
 	userMgr    UserManager
 	server     *http.Server
+	cookieTTL  time.Duration
 }
 
 func New(settings Settings) *API {
@@ -65,6 +67,7 @@ func New(settings Settings) *API {
 		orderMgr:   settings.OrderMgr,
 		BalanceMgr: settings.BalanceMgr,
 		userMgr:    settings.UserMgr,
+		cookieTTL:  settings.CookieTTL,
 	}
 
 	// Создание роутера

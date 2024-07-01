@@ -10,6 +10,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	sharederrors "github.com/FlutterDizaster/gophermart-bonus/internal/shared-errors"
 )
@@ -34,13 +35,13 @@ func (api *API) registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Добавить время жизни cookie
 	// Создание cookie
 	cookie := &http.Cookie{
 		Name:     "Auth",
 		Value:    token,
 		Secure:   true,
 		HttpOnly: true,
+		Expires:  time.Now().Add(api.cookieTTL),
 	}
 
 	// Установка cookie

@@ -33,7 +33,7 @@ var _ Middleware = &AuthMiddleware{}
 
 func (m *AuthMiddleware) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasSuffix(r.URL.Path, "/") { //TODO: поправить
+		if !strings.HasSuffix(r.URL.Path, "/") { //FIXME:
 			r.URL.Path += "/"
 		}
 		// Проверка URL на наличие в списке публичных

@@ -130,17 +130,18 @@ func parseFiles(settings server.Settings) server.Settings {
 }
 
 func loadKeyFromFile(path string) string {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		os.Exit(1)
 	}
 	defer file.Close()
 
-	reader := bufio.NewReader(file)
-	key, err := reader.ReadString('\n')
-	if err != nil {
+	scanner := bufio.NewScanner(file)
+	if !scanner.Scan() {
+		slog.Error("error reading key from file. Creating new key")
 		return generateKeyFile(file)
 	}
+	key := scanner.Text()
 
 	return key
 }

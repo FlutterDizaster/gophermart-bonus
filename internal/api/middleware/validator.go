@@ -51,9 +51,7 @@ func (h *Validator) Handle(next http.Handler) http.Handler {
 		// Получение хеша из заголовка запроса
 		sampleHashString := r.Header.Get("HashSHA256")
 		if sampleHashString == "" {
-			// TODO: for tests
 			next.ServeHTTP(hw, r)
-			// http.Error(w, "HashSHA256 Header required", http.StatusBadRequest)
 			return
 		}
 		sampleHash, err := hex.DecodeString(sampleHashString)

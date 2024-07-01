@@ -75,6 +75,7 @@ func New(settings Settings) (*Server, error) {
 		Addr:          settings.Addr,
 		TokenResolver: resolver,
 		HashSumSecret: settings.SHASecret,
+		CookieTTL:     24 * time.Hour,
 	}
 
 	apiService := api.New(apiSettings)

@@ -19,7 +19,7 @@ import (
 
 func getCredentialsFromReq(r *http.Request) (models.Credentials, error) {
 	var cred models.Credentials
-	var buf bytes.Buffer // TODO: Получение буфера из пула
+	var buf bytes.Buffer
 
 	// Проверка Content-Type
 	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
