@@ -21,7 +21,7 @@ type Orders []Order
 
 //go:generate easyjson -all order.go
 type Order struct {
-	ID         uint64
+	ID         uint64      `json:"-"`
 	StringID   string      `json:"number"`
 	Status     OrderStatus `json:"status"`
 	Accrual    *float64    `json:"accrual,omitempty"`

@@ -102,8 +102,6 @@ func easyjson120d1ca2DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 			continue
 		}
 		switch key {
-		case "ID":
-			out.ID = uint64(in.Uint64())
 		case "number":
 			out.StringID = string(in.String())
 		case "status":
@@ -135,13 +133,13 @@ func easyjson120d1ca2EncodeGithubComFlutterDizasterGophermartBonusInternalModels
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"ID\":"
-		out.RawString(prefix[1:])
-		out.Uint64(uint64(in.ID))
-	}
-	{
 		const prefix string = ",\"number\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.StringID))
 	}
 	{
