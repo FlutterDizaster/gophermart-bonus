@@ -153,21 +153,21 @@ func (repo *Repository) ProcessWithdraw(
 	}
 
 	// Проверка кем был добавлен заказ и есть ли он
-	var existingUserID uint64
-	err = repo.db.QueryRow(
-		ctx,
-		checkOrderQuery,
-		withdraw.OrderID,
-	).Scan(&existingUserID)
-	if err == nil {
-		if existingUserID != userID {
-			// Если заказ уже существует, но принадлежит другому пользователю
-			return sharederrors.ErrWithdrawNotAllowed
-		}
-	} else {
-		// Возвращаем необробатываемую ошибку
-		return err
-	}
+	// var existingUserID uint64
+	// err = repo.db.QueryRow(
+	// 	ctx,
+	// 	checkOrderQuery,
+	// 	withdraw.OrderID,
+	// ).Scan(&existingUserID)
+	// if err == nil {
+	// 	if existingUserID != userID {
+	// 		// Если заказ уже существует, но принадлежит другому пользователю
+	// 		return sharederrors.ErrWithdrawNotAllowed
+	// 	}
+	// } else {
+	// 	// Возвращаем необробатываемую ошибку
+	// 	return err
+	// }
 
 	// Проверка не было ли списаний по этому заказу
 	var status bool
