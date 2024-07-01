@@ -149,8 +149,8 @@ func (repo *Repository) ProcessWithdraw(
 	_, err = repo.db.Exec(
 		ctx,
 		processWithdrawQuery,
-		userID,
 		withdraw.OrderID,
+		userID,
 		withdraw.Sum,
 	)
 	return err
@@ -195,12 +195,6 @@ func (repo *Repository) AddOrder(ctx context.Context, userID uint64, order model
 }
 
 func (repo *Repository) UpdateOrder(ctx context.Context, order models.Order) error {
-	// slog.Info("updating order", slog.Group(
-	// 	"order",
-	// 	slog.Uint64("id", order.ID),
-	// 	slog.String("status", string(order.Status)),
-	// 	slog.Float64("accrual", *order.Accrual),
-	// ))
 	_, err := repo.db.Exec(
 		ctx,
 		updateOrderQuery,

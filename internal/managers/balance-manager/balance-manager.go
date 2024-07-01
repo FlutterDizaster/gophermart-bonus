@@ -11,6 +11,7 @@ package balancemanager
 
 import (
 	"context"
+	"log/slog"
 	"strconv"
 
 	"github.com/FlutterDizaster/gophermart-bonus/internal/models"
@@ -45,6 +46,15 @@ func (m *BalanceManager) ProcessWithdraw(
 	userID uint64,
 	withdraw models.Withdraw,
 ) error {
+	slog.Debug(
+		"processing withdraw",
+		slog.Uint64("user id", userID),
+		slog.Group(
+			"withdraw",
+			slog.Uint64("order id", withdraw.OrderID),
+			slog.Float64("sum", withdraw.Sum),
+		),
+	)
 	return m.balanceRepo.ProcessWithdraw(ctx, userID, withdraw)
 }
 

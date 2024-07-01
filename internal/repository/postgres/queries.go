@@ -2,8 +2,18 @@ package postgres
 
 const (
 	userBalanceQuery = `SELECT 
-    (SELECT COALESCE(SUM(accrual), 0) FROM orders WHERE user_id = $1) AS balance,
-    (SELECT COALESCE(SUM(sum), 0) FROM withdrawals WHERE user_id = $1) AS total_withdrawals;
+    COALESCE(SUM(o.accrual), 0) - COALESCE(SUM(w.sum), 0) AS balance,
+    COALESCE(SUM(w.sum), 0) AS total_withdrawals
+FROM 
+    users u
+LEFT JOIN 
+    orders o ON u.id = o.user_id
+LEFT JOIN 
+    withdrawals w ON u.id = w.user_id
+WHERE 
+    u.id = $1
+GROUP BY 
+    u.id;
 `
 
 	userWithdrawalsQuery = `SELECT
@@ -24,7 +34,7 @@ WHERE
 `
 
 	processWithdrawQuery = `INSERT INTO withdrawals (order_id, user_id, sum, processed_at)
-VALUES ($1, (SELECT user_id FROM orders WHERE id = $1), $2, CURRENT_TIMESTAMP);
+VALUES ($1, $2, $3, CURRENT_TIMESTAMP);
 `
 
 	checkOrderQuery = `SELECT user_id
@@ -82,6 +92,7 @@ CREATE TABLE IF NOT EXISTS withdrawals (
     id SERIAL PRIMARY KEY NOT NULL,
     order_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
-    sum DOUBLE PRECISION NOT NULL
+    sum DOUBLE PRECISION NOT NULL,
+    processed_at TIMESTAMP NOT NULL
 );`
 )
