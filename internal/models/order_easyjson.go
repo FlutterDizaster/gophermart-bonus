@@ -102,8 +102,10 @@ func easyjson120d1ca2DecodeGithubComFlutterDizasterGophermartBonusInternalModels
 			continue
 		}
 		switch key {
-		case "number":
+		case "ID":
 			out.ID = uint64(in.Uint64())
+		case "number":
+			out.StringID = string(in.String())
 		case "status":
 			out.Status = OrderStatus(in.String())
 		case "accrual":
@@ -133,9 +135,14 @@ func easyjson120d1ca2EncodeGithubComFlutterDizasterGophermartBonusInternalModels
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"number\":"
+		const prefix string = ",\"ID\":"
 		out.RawString(prefix[1:])
 		out.Uint64(uint64(in.ID))
+	}
+	{
+		const prefix string = ",\"number\":"
+		out.RawString(prefix)
+		out.String(string(in.StringID))
 	}
 	{
 		const prefix string = ",\"status\":"

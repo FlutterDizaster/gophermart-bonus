@@ -104,7 +104,14 @@ loop:
 
 func (om *OrderManager) Get(ctx context.Context, userID uint64) (models.Orders, error) {
 	slog.Debug("getting orders for user", slog.Uint64("user id", userID))
-	return om.repo.GetAllOrders(ctx, userID)
+	orders, err := om.repo.GetAllOrders(ctx, userID)
+
+	for i, order := range orders {
+		order.StringID = strconv.FormatUint(order.ID, 10)
+		orders[i] = order
+	}
+
+	return orders, err
 }
 
 func (om *OrderManager) Register(ctx context.Context, userID uint64, orderID uint64) error {
