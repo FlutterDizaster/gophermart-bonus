@@ -63,6 +63,23 @@ func (m *AuthMiddleware) Handle(next http.Handler) http.Handler {
 				}
 			}
 		}
+		// Получение header
+		token := r.Header.Get("Authorization")
+		if token != "" {
+			claims, err := m.Resolver.DecryptToken(token)
+			if err == nil {
+				// Сохранение userID в контекст
+				ctx := context.WithValue(r.Context(), ctxkeys.UserID, claims.UserID)
+
+				// Создание нового запроса с контекстом
+				req := r.WithContext(ctx)
+
+				// Передача управления следующему хендлеру с новым запросом
+				next.ServeHTTP(w, req)
+				return
+			}
+		}
+
 		// Отправка ответа
 		w.WriteHeader(http.StatusUnauthorized)
 	})

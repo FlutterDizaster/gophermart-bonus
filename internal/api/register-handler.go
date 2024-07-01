@@ -47,6 +47,8 @@ func (api *API) registerHandler(w http.ResponseWriter, r *http.Request) {
 	// Установка cookie
 	http.SetCookie(w, cookie)
 
+	w.Header().Add("Authorization", token)
+
 	// Отправка ответа
 	w.WriteHeader(http.StatusOK)
 }
